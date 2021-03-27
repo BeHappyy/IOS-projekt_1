@@ -80,7 +80,6 @@ done
 
 if [ "$TFLAG" = "1" ]; then
     LOG_FILES=$(echo "$LOG_FILES" | awk -F ';' -v ticker="$TICKER" 'ticker~ $2";" {print}')
-    echo "$LOG_FILES"
 fi
 if [ "$DAFLAG" = "1" ]; then
     LOG_FILES=$(echo "$LOG_FILES" | awk -F ';' -v after="$DATE_AFTER" '$1 > after {print}')
@@ -92,5 +91,19 @@ if [ "$COMMAND" = "list-tick" ]; then
     LOG_FILES=$(echo "$LOG_FILES" | awk -F ';' '{print$2}' | sort -u | sed '/./,$!d')
     echo "$LOG_FILES"
 fi
-#При выписе лист-тик первая строка пустая лишняя как убрать узнать(все из за сорта хз почему)
+if [ "$COMMAND" = "profit" ]; then
+    echo "$LOG_FILES" | awk -F ';' '{if ($3=="sell"){ q1+=+$4*$6} else{ q2+=$4*$6}} END {printf("%.2f\n", q1-q2)}'
+fi
+
+
+
+
+
+
+
+
+
+
+
+
 #пос - узнать почему там отрицательные ходноты
