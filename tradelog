@@ -9,6 +9,9 @@ print_help()
 	echo "       tradelog [FILTR] [PŘÍKAZ] [LOG [LOG2 [...]]"
 	echo ""
 }
+
+
+
 COMMAND=""
 WIDTH=""
 TICKER=""
@@ -80,6 +83,7 @@ done
 
 if [ "$TFLAG" = "1" ]; then
     LOG_FILES=$(echo "$LOG_FILES" | awk -F ';' -v ticker="$TICKER" 'ticker~ $2";" {print}')
+    echo "$LOG_FILES"
 fi
 if [ "$DAFLAG" = "1" ]; then
     LOG_FILES=$(echo "$LOG_FILES" | awk -F ';' -v after="$DATE_AFTER" '$1 > after {print}')
@@ -88,12 +92,17 @@ if [ "$DBFLAG" = "1" ]; then
     LOG_FILES=$(echo "$LOG_FILES" | awk -F ';' -v before="$DATE_BEFORE" '$1 < before {print}')
 fi
 if [ "$COMMAND" = "list-tick" ]; then
-    LOG_FILES=$(echo "$LOG_FILES" | awk -F ';' '{print$2}' | sort -u | sed '/./,$!d')
+    LOG_FILES=$(echo "$LOG_FILES" | awk -F ';' '{print}' | sort -u | sed '/./,$!d')
     echo "$LOG_FILES"
 fi
 if [ "$COMMAND" = "profit" ]; then
     echo "$LOG_FILES" | awk -F ';' '{if ($3=="sell"){ q1+=+$4*$6} else{ q2+=$4*$6}} END {printf("%.2f\n", q1-q2)}'
 fi
+
+# if [[ "$COMMAND" = "last-price"  ]]; then
+#     LOG_FILES=$(echo "$LOG_FILES" | awk -F ";" '!
+#     echo "$LOG_FILES"
+# fi
 
 
 
