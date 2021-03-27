@@ -89,7 +89,7 @@ if [ "$DBFLAG" = "1" ]; then
     LOG_FILES=$(echo "$LOG_FILES" | awk -F ';' -v before="$DATE_BEFORE" '$1 < before {print}')
 fi
 if [ "$COMMAND" = "list-tick" ]; then
-    LOG_FILES=$(echo "$LOG_FILES" | awk -F ';' '{print$2}' |sort -u)
+    LOG_FILES=$(echo "$LOG_FILES" | awk -F ';' '{print$2}' | sort -u | sed '/./,$!d')
     echo "$LOG_FILES"
 fi
 #При выписе лист-тик первая строка пустая лишняя как убрать узнать(все из за сорта хз почему)
