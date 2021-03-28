@@ -1,5 +1,5 @@
 #!/bin/sh
-DATE=`date +"%D %T"`
+DATE=`date +"%T %D"`
 all :
 	git add -A
 	git commit -m "Update $(DATE)"
