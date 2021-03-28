@@ -45,7 +45,7 @@ do case "$opts" in
    w) WCOUNT=$(( $WCOUNT + 1 ))
       if [ "$WCOUNT" = 2 ]; then
           echo "Chybne spusteni"
-          exit 0;
+          exit 1;
       fi
      WIDTH="$OPTARG";;
    h) print_help
@@ -53,7 +53,7 @@ do case "$opts" in
    -) print_help
       exit 0;;
    *) echo "Invalid flag"
-      exit 0;;
+      exit 1;;
    esac
 done
 
@@ -75,7 +75,7 @@ while [ "$#" -gt 0 ]; do
     ;;
   *)
     echo "Invalid argument"
-    exit 0
+    exit 1
     ;;
   esac
 done
