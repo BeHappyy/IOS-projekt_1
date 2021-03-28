@@ -23,9 +23,8 @@ DAFLAG=""
 DBFLAG=""
 WCOUNT=0
 NOPTARG=""
+PROFIT=0.00
 
-echo "$#"
-text=
 while getopts w:t:a:b:h-: opts
 do case "$opts" in
    a) DAFLAG=1
@@ -82,9 +81,9 @@ while [ "$#" -gt 0 ]; do
 done
 
 
+
 if [ "$TFLAG" = "1" ]; then
     LOG_FILES=$(echo "$LOG_FILES" | awk -F ';' -v ticker="$TICKER" 'ticker~ $2";" {print}')
-    echo "$LOG_FILES"
 fi
 if [ "$DAFLAG" = "1" ]; then
     LOG_FILES=$(echo "$LOG_FILES" | awk -F ';' -v after="$DATE_AFTER" '$1 > after {print}')
@@ -93,26 +92,19 @@ if [ "$DBFLAG" = "1" ]; then
     LOG_FILES=$(echo "$LOG_FILES" | awk -F ';' -v before="$DATE_BEFORE" '$1 < before {print}')
 fi
 if [ "$COMMAND" = "list-tick" ]; then
-    LOG_FILES=$(echo "$LOG_FILES" | awk -F ';' '{print}' | sort -u | sed '/./,$!d')
+    LOG_FILES=$(echo "$LOG_FILES" | awk -F ';' '{print $2}' | sort -u | sed '/./,$!d')
     echo "$LOG_FILES"
 fi
 if [ "$COMMAND" = "profit" ]; then
-    echo "$LOG_FILES" | awk -F ';' '{if ($3=="sell"){ q1+=+$4*$6} else{ q2+=$4*$6}} END {printf("%.2f\n", q1-q2)}'
+  PROFIT=$(echo "$LOG_FILES" | awk -F ';' '{if ($3=="sell"){ q1+=+$4*$6} else{ q2+=$4*$6}} END {printf("%.2f\n", q1-q2)}')
+  echo "$PROFIT"
 fi
 
-if [[ "$COMMAND" = "last-price"  ]]; then
-    LOG_FILES=$(echo "$LOG_FILES" | sed '1!G;h;$!d' | awk -F ";" '{print $2" "$4}' | sort -u -k 1,1)
+if [ "$COMMAND" = "last-price" ]; then
+    LOG_FILES=$(echo "$LOG_FILES" | sed '1!G;h;$!d' | awk -F ";" '{printf("%10s",$2$4)}' | sort -u -k 1,1 )
+    #LOG_FILES=$(echo "$LOG_FILES" | sed '1!G;h;$!d' | awk -F ";" '!_[$2]++  {print $2" "$4}')
     echo "$LOG_FILES"
 fi
-
-# sort -u -t : -k 1,1 -k 3,3
-#
-#     LOG_FILES=$(echo "$LOG_FILES" | sed '1!G;h;$!d' | awk -F ";" '!_[$2]++  {print $2" "$4}')
-
-
-
-#asfasf
-
 
 
 
@@ -120,3 +112,7 @@ fi
 #а уже его содержимое
 #3)пос находим сумму всех позиций а потом селлим их / баем их (селл минус бай плюс)
 #4)Выволд ошбки если вызван препинач без параметров
+#5) Отформатировать вывод ласт прайс чтобы как в примерах
+#6) Закинуть все в функции отдельные
+#7)Профит по дефолту равен 0
+#8)Если после препинача минус т стоит еще что то
