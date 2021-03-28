@@ -2,6 +2,5 @@
 DATE=`date`
 all :
 	git add -A
-	git commit -m "Update $DATE "
-	git push
-	echo $DATE	
+	git commit -m "Update $(date)"
+	git push	
