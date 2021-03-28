@@ -100,15 +100,14 @@ if [ "$COMMAND" = "profit" ]; then
     echo "$LOG_FILES" | awk -F ';' '{if ($3=="sell"){ q1+=+$4*$6} else{ q2+=$4*$6}} END {printf("%.2f\n", q1-q2)}'
 fi
 
-# if [[ "$COMMAND" = "last-price"  ]]; then
-#     LOG_FILES=$(echo "$LOG_FILES" | awk -F ";" '!
-#     echo "$LOG_FILES"
-# fi
+if [[ "$COMMAND" = "last-price"  ]]; then
+    LOG_FILES=$(echo "$LOG_FILES" | sed '1!G;h;$!d' | awk -F ";" '{print $2" "$4}' | sort -u -k 1,1)
+    echo "$LOG_FILES"
+fi
 
-
-
-
-
+# sort -u -t : -k 1,1 -k 3,3
+#
+#     LOG_FILES=$(echo "$LOG_FILES" | sed '1!G;h;$!d' | awk -F ";" '!_[$2]++  {print $2" "$4}')
 
 
 
