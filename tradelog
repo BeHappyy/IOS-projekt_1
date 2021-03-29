@@ -123,14 +123,23 @@ if (width!=0 && int(count) > width) {
 fi
 
 if [ "$COMMAND" = "pos" ]; then
-  LOG_FILES=$(echo "$LOG_FILES" | awk -F ';' '{print$2" "$3" "$6" "$4}'| sort | sed '1d' | awk '{ seen[$1]=$4}} END { for (i in seen) print i, seen[i]}' | sort)
+  LOG_FILES=$(echo "$LOG_FILES" | awk -F ';' '{print$2" "$1" "$6" "$4" "$3}' | sort -k1,2 |sed '1d' |  awk '{if($6=="buy")
+  { seen[$1]+=$4; lp[$1]=$5} else {seen[$1]-=$4; lp[$1]=$5} }
+  END { for (i in seen)
+  printf("%s:%.2f\n"), i, lp[i]*seen[i]}' | sort -n -t: -k2,2 | sed '1!G;h;$!d')
+
+  longestNum=$(echo "$LOG_FILES" | awk -F  ":" '{num=sprintf($2)
+  if(length(num) > longestNum)
+  {
+    longestNum=length(num)
+  }
+  } END {print longestNum}')
+  LOG_FILES=$(echo "$LOG_FILES" | awk -F ":" -v lN="$longestNum" '{printf("%-9s : %*.2f\n", $1, lN, $2)}')
 fi
-        echo "$LOG_FILES"
+  echo "$LOG_FILES"
 
 #2)Должен описовать зазнымы если не дано ни приказов ни фильтров при этом он может получить на вход не название файла
 #а уже его содержимое
-#3)пос находим сумму всех позиций а потом селлим их / баем их (селл минус бай плюс)
 #4)Выволд ошбки если вызван препинач без параметров
 #6) Закинуть все в функции отдельные
 #7)Chyba kdyz WIDTH < 0
-#8) Разобрать hash map чтобы сделать пос уже
