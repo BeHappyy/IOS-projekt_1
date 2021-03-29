@@ -143,3 +143,9 @@ fi
 #4)Выволд ошбки если вызван препинач без параметров
 #6) Закинуть все в функции отдельные
 #7)Chyba kdyz WIDTH < 0
+#8)Dodelat graph-pos
+#9)Dodelat help
+#10)Prognat po testam v 1001 raz
+#11)Ubrat lishnie peremennye
+#12)Naiti kak proverit rabotosposobnost na vsex shellax
+#13)Proverit na merline
