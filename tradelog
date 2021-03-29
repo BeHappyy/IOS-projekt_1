@@ -13,7 +13,7 @@ print_help()
 
 
 COMMAND=""
-WIDTH=""
+WIDTH=0
 TICKER=""
 DATE_BEFORE="9999-12-31 23:59:59"
 DATE_AFTER="0000-00-00 00:00:00"
@@ -93,38 +93,44 @@ if [ "$DBFLAG" = "1" ]; then
 fi
 if [ "$COMMAND" = "list-tick" ]; then
     LOG_FILES=$(echo "$LOG_FILES" | awk -F ';' '{print $2}' | sort -u | sed '/./,$!d')
-    echo "$LOG_FILES"
 fi
 if [ "$COMMAND" = "profit" ]; then
   PROFIT=$(echo "$LOG_FILES" | awk -F ';' '{if ($3=="sell"){ q1+=+$4*$6} else{ q2+=$4*$6}} END {printf("%.2f\n", q1-q2)}')
   echo "$PROFIT"
+  exit 0;
 fi
 
 if [ "$COMMAND" = "last-price" ]; then
-    EDITED=$(echo "$LOG_FILES" | sed '1!G;h;$!d' | awk -F ";" '{print$2":"$4}' | sort -t: -u -k 1,1 | sed '1d')
+    LOG_FILES=$(echo "$LOG_FILES" | sed '1!G;h;$!d' | awk -F ";" '{print$2":"$4}' | sort -t: -u -k 1,1 | sed '1d')
         longestNum=0
-        longestNum=$(echo "$EDITED" | awk -F  ":" '{num=sprintf($2)
+        longestNum=$(echo "$LOG_FILES" | awk -F  ":" '{num=sprintf($2)
         if(length(num) > longestNum)
         {
           longestNum=length(num)
         }
         } END {print longestNum}')
-        EDITED=$(echo "$EDITED" | awk -F ":" -v lN="$longestNum" '{num=sprintf($2); tick=sprintf($1);
-         printf("%-9s : %*s\n", $1, lN, num)}')
-        echo "$EDITED"
+        LOG_FILES=$(echo "$LOG_FILES" | awk -F ":" -v lN="$longestNum" '{printf("%-9s : %*s\n", $1, lN, $2)}')
+
+fi
+
+if [ "$COMMAND" = "hist-ord" ]; then
+  LOG_FILES=$(echo "$LOG_FILES" | awk -F ';' '{print$2}'| sort | sed '1d' | uniq -c | awk -v width="$WIDTH" '{ count=sprintf($1);sy="#";
+if (width!=0 && int(count) > width) {
+
+    count=width
+    #print count
+  };str=sprintf("%*c",count,sy); gsub(" ",sy,str); printf("%-9s : %s\n", $2, str)}')
 fi
 
 if [ "$COMMAND" = "pos" ]; then
-  PROFIT=$(echo "$LOG_FILES" | awk -F ';' '{if ($3=="sell"){ q1+=+$4*$6} else{ q2+=$4*$6}} END {printf("%.2f\n", q1-q2)}')
-  echo "$PROFIT"
+  LOG_FILES=$(echo "$LOG_FILES" | awk -F ';' '{print$2" "$3" "$6}'| sort | sed '1d' | awk '{ seen[$1" "$2] += $3 } END { for (i in seen) print i, seen[i] }')
 fi
-
-
-
+        echo "$LOG_FILES"
 
 #2)Должен описовать зазнымы если не дано ни приказов ни фильтров при этом он может получить на вход не название файла
 #а уже его содержимое
 #3)пос находим сумму всех позиций а потом селлим их / баем их (селл минус бай плюс)
 #4)Выволд ошбки если вызван препинач без параметров
-#5) Отформатировать вывод ласт прайс чтобы как в примерах
 #6) Закинуть все в функции отдельные
+#7)Chyba kdyz WIDTH < 0
+#8) Разобрать hash map чтобы сделать пос уже
