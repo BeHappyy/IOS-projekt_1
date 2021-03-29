@@ -80,6 +80,7 @@ while [ "$#" -gt 0 ]; do
   esac
 done
 
+LOG_FILES=$(echo "$LOG_FILES" | sed '/^$/d')
 
 
 if [ "$TFLAG" = "1" ]; then
@@ -92,7 +93,7 @@ if [ "$DBFLAG" = "1" ]; then
     LOG_FILES=$(echo "$LOG_FILES" | awk -F ';' -v before="$DATE_BEFORE" '$1 < before {print}')
 fi
 if [ "$COMMAND" = "list-tick" ]; then
-    LOG_FILES=$(echo "$LOG_FILES" | awk -F ';' '{print $2}' | sort -u | sed '/./,$!d')
+    LOG_FILES=$(echo "$LOG_FILES" | awk -F ';' '{print $2}' | sort -u)
 fi
 if [ "$COMMAND" = "profit" ]; then
   PROFIT=$(echo "$LOG_FILES" | awk -F ';' '{if ($3=="sell"){ q1+=+$4*$6} else{ q2+=$4*$6}} END {printf("%.2f\n", q1-q2)}')
@@ -101,7 +102,7 @@ if [ "$COMMAND" = "profit" ]; then
 fi
 
 if [ "$COMMAND" = "last-price" ]; then
-    LOG_FILES=$(echo "$LOG_FILES" | sed '1!G;h;$!d' | awk -F ";" '{print$2":"$4}' | sort -t: -u -k 1,1 | sed '1d')
+    LOG_FILES=$(echo "$LOG_FILES" | sed '1!G;h;$!d' | awk -F ";" '{print$2":"$4}' | sort -t: -u -k 1,1)
         longestNum=0
         longestNum=$(echo "$LOG_FILES" | awk -F  ":" '{num=sprintf($2)
         if(length(num) > longestNum)
@@ -114,7 +115,7 @@ if [ "$COMMAND" = "last-price" ]; then
 fi
 
 if [ "$COMMAND" = "hist-ord" ]; then
-  LOG_FILES=$(echo "$LOG_FILES" | awk -F ';' '{print$2}'| sort | sed '1d' | uniq -c | awk -v width="$WIDTH" '{ count=sprintf($1);sy="#";
+  LOG_FILES=$(echo "$LOG_FILES" | awk -F ';' '{print$2}'| sort | uniq -c | awk -v width="$WIDTH" '{ count=sprintf($1);sy="#";
 if (width!=0 && int(count) > width) {
 
     count=width
@@ -123,11 +124,10 @@ if (width!=0 && int(count) > width) {
 fi
 
 if [ "$COMMAND" = "pos" ]; then
-  LOG_FILES=$(echo "$LOG_FILES" | awk -F ';' '{print$2" "$1" "$6" "$4" "$3}' | sort -k1,2 |sed '1d' |  awk '{if($6=="buy")
+   LOG_FILES=$(echo "$LOG_FILES" | awk -F ';' '{print$2" "$1" "$6" "$4" "$3}' | sort -k1,2 |  awk '{if($6=="buy")
   { seen[$1]+=$4; lp[$1]=$5} else {seen[$1]-=$4; lp[$1]=$5} }
   END { for (i in seen)
-  printf("%s:%.2f\n"), i, lp[i]*seen[i]}' | sort -n -t: -k2,2 | sed '1!G;h;$!d')
-
+  printf("%s:%.2f\n"), i, seen[i]*lp[i]}' | sort -n -t: -k2,2 | sed '1!G;h;$!d')
   longestNum=$(echo "$LOG_FILES" | awk -F  ":" '{num=sprintf($2)
   if(length(num) > longestNum)
   {
