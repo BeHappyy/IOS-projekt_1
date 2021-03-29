@@ -109,7 +109,8 @@ if [ "$COMMAND" = "last-price" ]; then
           longestNum=length(num)
         }
         } END {print longestNum}')
-        EDITED=$(echo "$EDITED" | awk -F ":" -v lN="$longestNum" '{num=sprintf($2); tick=sprintf($1);a=11-length(tick); printf("%-9s : %*s\n", $1, lN, num)}')
+        EDITED=$(echo "$EDITED" | awk -F ":" -v lN="$longestNum" '{num=sprintf($2); tick=sprintf($1);
+         printf("%-9s : %*s\n", $1, lN, num)}')
         echo "$EDITED"
 fi
 
@@ -120,19 +121,6 @@ fi
 
 
 
-# if [ "$COMMAND" = "last-price" ]; then
-#     EDITED=$(echo "$LOG_FILES" | sed '1!G;h;$!d' | awk -F ";" '{print $2 ":" $4}' | sort -u -k 1,1 )
-#     longestNum=0
-#     echo "$EDITED"
-#     longestNum=$(echo "$EDITED" | awk -F  ":" '{num=sprintf($2)
-#     if(length(num) > longestNum)
-#     {
-#       longestNum=length(num)
-#     }
-#     } END {print longestNum}')
-#     EDITED=$(echo "$EDITED" | awk -F ":" -v lN=longestNum '{num=sprintf($2); printf("%0s : %*s\n", $1, lN, num)}')
-#     #echo "$EDITED"
-# fi
 
 #2)Должен описовать зазнымы если не дано ни приказов ни фильтров при этом он может получить на вход не название файла
 #а уже его содержимое
