@@ -101,11 +101,38 @@ if [ "$COMMAND" = "profit" ]; then
 fi
 
 if [ "$COMMAND" = "last-price" ]; then
-    LOG_FILES=$(echo "$LOG_FILES" | sed '1!G;h;$!d' | awk -F ";" '{printf("%10s",$2$4)}' | sort -u -k 1,1 )
-    #LOG_FILES=$(echo "$LOG_FILES" | sed '1!G;h;$!d' | awk -F ";" '!_[$2]++  {print $2" "$4}')
-    echo "$LOG_FILES"
+    EDITED=$(echo "$LOG_FILES" | sed '1!G;h;$!d' | awk -F ";" '{print$2":"$4}' | sort -t: -u -k 1,1 | sed '1d')
+        longestNum=0
+        longestNum=$(echo "$EDITED" | awk -F  ":" '{num=sprintf($2)
+        if(length(num) > longestNum)
+        {
+          longestNum=length(num)
+        }
+        } END {print longestNum}')
+        EDITED=$(echo "$EDITED" | awk -F ":" -v lN="$longestNum" '{num=sprintf($2); tick=sprintf($1);a=11-length(tick); printf("%-9s : %*s\n", $1, lN, num)}')
+        echo "$EDITED"
 fi
 
+if [ "$COMMAND" = "pos" ]; then
+  PROFIT=$(echo "$LOG_FILES" | awk -F ';' '{if ($3=="sell"){ q1+=+$4*$6} else{ q2+=$4*$6}} END {printf("%.2f\n", q1-q2)}')
+  echo "$PROFIT"
+fi
+
+
+
+# if [ "$COMMAND" = "last-price" ]; then
+#     EDITED=$(echo "$LOG_FILES" | sed '1!G;h;$!d' | awk -F ";" '{print $2 ":" $4}' | sort -u -k 1,1 )
+#     longestNum=0
+#     echo "$EDITED"
+#     longestNum=$(echo "$EDITED" | awk -F  ":" '{num=sprintf($2)
+#     if(length(num) > longestNum)
+#     {
+#       longestNum=length(num)
+#     }
+#     } END {print longestNum}')
+#     EDITED=$(echo "$EDITED" | awk -F ":" -v lN=longestNum '{num=sprintf($2); printf("%0s : %*s\n", $1, lN, num)}')
+#     #echo "$EDITED"
+# fi
 
 #2)Должен описовать зазнымы если не дано ни приказов ни фильтров при этом он может получить на вход не название файла
 #а уже его содержимое
@@ -113,4 +140,3 @@ fi
 #4)Выволд ошбки если вызван препинач без параметров
 #5) Отформатировать вывод ласт прайс чтобы как в примерах
 #6) Закинуть все в функции отдельные
-x
