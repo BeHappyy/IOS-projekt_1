@@ -3,12 +3,13 @@
 export POSIXLY_CORRECT=yes
 export LC_NUMERIC=en_US.UTF-8
 
-# if ! test -t 0; then
-#     while IFS= read -r line; do
-#       LOG_FILES="$LOG_FILES$line\n"
-#     done
-#     echo $LOG_FILES
-# fi
+ if ! test -t 0; then
+     while IFS= read -r line; do
+       LOG_FILES="$LOG_FILES$line\n"
+       
+     done
+     echo $LOG_FILES
+ fi
 
 print_help()
 { echo "NAME"
