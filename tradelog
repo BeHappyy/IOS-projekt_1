@@ -3,33 +3,8 @@
 export POSIXLY_CORRECT=yes
 export LC_NUMERIC=en_US.UTF-8
 
-COMMAND=""
-WIDTH=0
-TICKER=""
-DATE_BEFORE="9999-12-31 23:59:59"
-DATE_AFTER="0000-00-00 00:00:00"
-LOG_FILES=""
-TFLAG=""
-DAFLAG=""
-DBFLAG=""
-WCOUNT=0
-NOPTARG=""
-PROFIT=0.00
-
-# test whether there is redirected input
-if ! test -t 0; then
-    RI_FLAG=1
-    while IFS= read -r line; do
-      LOG_FILES="$LOG_FILES$line\n"
-    done
-    # deleting the last "\n" empty line by the means of NF(number of fields in a line)
-    ## Sorry for such a coding style :(
-    LOG_FILES=$(echo "$LOG_FILES" | awk -F ';' '{ if (NF == 0) {next}
-                                                  else {print} }')
-fi
-
-print_help()
-{ echo "NAME"
+print_help(){
+echo "NAME"
   echo "     tradelog -- stock market log analyzer\n"
   echo "SYNOPSIS"
   echo "     tradelog [-h|--help]"
@@ -76,20 +51,153 @@ print_help()
   echo "                                         2021 Mar 30                                       "
 }
 
-pos_func() {
-  LOG_FILES=$(echo "$LOG_FILES" | awk -F ';' '{print$2" "$1" "$6" "$4" "$3}' | sort -k1,2 |  awk '{if($6=="buy")
- { seen[$1]+=$4; lp[$1]=$5} else {seen[$1]-=$4; lp[$1]=$5} }
- END { for (i in seen)
- printf("%s:%.2f\n"), i, seen[i]*lp[i]}' | sort -n -t: -k2,2 | sed '1!G;h;$!d')
- longestNum=$(echo "$LOG_FILES" | awk -F  ":" '{num=sprintf($2)
- if(length(num) > longestNum)
- {
-   longestNum=length(num)
- }
- } END {print longestNum}')
- LOG_FILES=$(echo "$LOG_FILES" | awk -F ":" -v lN="$longestNum" '{printf("%-9s : %*.2f\n", $1, lN, $2)}')
+t_func() {
+  LOG_FILES=$(echo "$LOG_FILES" | awk -F ';' -v ticker="$TICKER" 'ticker~ $2";" {print}')
+}
+a_func() {
+  LOG_FILES=$(echo "$LOG_FILES" | awk -F ';' -v after="$DATE_AFTER" '$1 > after {print}')
 }
 
+b_func() {
+  LOG_FILES=$(echo "$LOG_FILES" | awk -F ';' -v before="$DATE_BEFORE" '$1 < before {print}')
+}
+
+list_tick_func() {
+  LOG_FILES=$(echo "$LOG_FILES" | awk -F ';' '{print $2}' | sort -u)
+}
+
+profit_func() {
+  PROFIT=$(echo "$LOG_FILES" | awk -F ';' '{
+    if ($3=="sell")
+    {
+      q1+=+$4*$6
+    }
+    else
+    {
+    q2+=$4*$6
+    }}
+    END {printf("%.2f\n", q1-q2)
+  }')
+  echo "$PROFIT"
+  exit 0;
+}
+
+pos_func() {
+  LOG_FILES=$(echo "$LOG_FILES" | awk -F ';' '{print$2" "$1" "$6" "$4" "$3}' | sort -k1,2 |  awk '{
+    if($6=="buy")
+    {
+      seen[$1]+=$4; lp[$1]=$5
+    }
+    else
+    {
+      seen[$1]-=$4; lp[$1]=$5
+    }}
+    END { for (i in seen)
+    printf("%s:%.2f\n"), i, seen[i]*lp[i]}' | sort -n -t: -k2,2 | sed '1!G;h;$!d')
+
+  longestNum=$(echo "$LOG_FILES" | awk -F  ":" '{
+    num=sprintf($2)
+    if(length(num) > longestNum)
+    {
+     longestNum=length(num)
+    }
+    } END {print longestNum
+  }')
+
+  LOG_FILES=$(echo "$LOG_FILES" | awk -F ":" -v lN="$longestNum" '{
+    printf("%-9s : %*.2f\n", $1, lN, $2)
+  }')
+}
+
+last_price_func() {
+  LOG_FILES=$(echo "$LOG_FILES" | sed '1!G;h;$!d' | awk -F ";" '{print$2":"$4}' | sort -t: -u -k 1,1)
+  longestNum=$(echo "$LOG_FILES" | awk -F  ":" '{
+    num=sprintf($2)
+    if(length(num) > longestNum)
+    {
+      longestNum=length(num)
+    }
+    } END {print longestNum
+  }')
+  LOG_FILES=$(echo "$LOG_FILES" | awk -F ":" -v lN="$longestNum" '{printf("%-9s : %*s\n", $1, lN, $2)}')
+}
+
+hist_ord_func() {
+  LOG_FILES=$(echo "$LOG_FILES" | awk -F ';' '{print$2}'| sort | uniq -c | awk -v width="$WIDTH" '{
+  count=sprintf($1);
+  sy="#";
+  if (width!=0 && int(count) > width)
+  {
+    count=width
+  };
+  str=sprintf("%*c",count,sy);
+  gsub(" ",sy,str);
+  printf("%-9s : %s\n", $2, str)
+}')
+}
+
+graph_pos_func() {
+  pos_func
+  longestNum=$(echo "$LOG_FILES" | sed 's/ //g'| awk -F  ":" '
+  function abs(x) {
+    return(sqrt(x * x))
+  }
+  {
+    num=sprintf($2)
+   if(abs(num) > abs(longestNum))
+  {
+    longestNum=num
+  }
+  } END {print longestNum
+  }')
+  LOG_FILES=$(echo "$LOG_FILES" | sort -t: -k1,1 | sed 's/ //g'  |awk -F ":" -v width="$WIDTH" -v lN="$longestNum" '{
+  if($2 < 0 )
+  {
+    sy="!"
+  }
+  else
+  {
+    sy="#"
+  }
+  if(width==0)
+  {
+    count=int($2/1000)
+  }
+  else
+  {
+    res=lN/width
+    count=int($2/res)
+  };
+  if(count==0){
+    printf("%-9s :\n", $1)
+  }
+  else{
+  str=sprintf("%*c",count,sy); gsub(" ",sy,str); printf("%-9s : %s\n", $1, str)
+ }}')
+}
+
+COMMAND=""
+TICKER=""
+DATE_BEFORE="9999-12-31 23:59:59"
+DATE_AFTER="0000-00-00 00:00:00"
+LOG_FILES=""
+TFLAG=""
+DAFLAG=""
+DBFLAG=""
+NOPTARG=""
+WCOUNT=0
+PROFIT=0.00
+WIDTH=0
+
+# test whether there is redirected input
+if ! test -t 0; then
+    RI_FLAG=1
+    while IFS= read -r line; do
+      LOG_FILES="$LOG_FILES$line\n"
+    done
+    # deleting the last "\n" empty line by the means of NF(number of fields in a line)
+    LOG_FILES=$(echo "$LOG_FILES" | awk -F ';' '{ if (NF == 0) {next} else {print} }')
+fi
 
 
 while getopts w:t:a:b:h-: opts
@@ -107,8 +215,8 @@ do case "$opts" in
       if [ $NOPTARG -lt $NDATE_BEFORE ]; then
         DATE_BEFORE="$OPTARG"
       fi ;;
-   t) TICKER="$TICKER$OPTARG;"
-      TFLAG=1;;
+   t) TFLAG=1
+      TICKER="$TICKER$OPTARG;";;
    w) WCOUNT=$(( $WCOUNT + 1 ))
       if [ "$WCOUNT" = 2 ]; then
           echo "Fail."
@@ -154,42 +262,28 @@ done
 
 LOG_FILES=$(echo "$LOG_FILES" | sed '/^$/d')
 
-
 if [ "$TFLAG" = "1" ]; then
-    LOG_FILES=$(echo "$LOG_FILES" | awk -F ';' -v ticker="$TICKER" 'ticker~ $2";" {print}')
+    t_func
 fi
 if [ "$DAFLAG" = "1" ]; then
-    LOG_FILES=$(echo "$LOG_FILES" | awk -F ';' -v after="$DATE_AFTER" '$1 > after {print}')
+    a_func
 fi
 if [ "$DBFLAG" = "1" ]; then
-    LOG_FILES=$(echo "$LOG_FILES" | awk -F ';' -v before="$DATE_BEFORE" '$1 < before {print}')
+    b_func
 fi
 if [ "$COMMAND" = "list-tick" ]; then
-    LOG_FILES=$(echo "$LOG_FILES" | awk -F ';' '{print $2}' | sort -u)
+    list_tick_func
 fi
 if [ "$COMMAND" = "profit" ]; then
-  PROFIT=$(echo "$LOG_FILES" | awk -F ';' '{if ($3=="sell"){ q1+=+$4*$6} else{ q2+=$4*$6}} END {printf("%.2f\n", q1-q2)}')
-  echo "$PROFIT"
-  exit 0;
+    profit_func
 fi
 
 if [ "$COMMAND" = "last-price" ]; then
-    LOG_FILES=$(echo "$LOG_FILES" | sed '1!G;h;$!d' | awk -F ";" '{print$2":"$4}' | sort -t: -u -k 1,1)
-        longestNum=$(echo "$LOG_FILES" | awk -F  ":" '{num=sprintf($2)
-        if(length(num) > longestNum)
-        {
-          longestNum=length(num)
-        }
-        } END {print longestNum}')
-        LOG_FILES=$(echo "$LOG_FILES" | awk -F ":" -v lN="$longestNum" '{printf("%-9s : %*s\n", $1, lN, $2)}')
-
+    last_price_func
 fi
 
 if [ "$COMMAND" = "hist-ord" ]; then
-  LOG_FILES=$(echo "$LOG_FILES" | awk -F ';' '{print$2}'| sort | uniq -c | awk -v width="$WIDTH" '{ count=sprintf($1);sy="#";
-if (width!=0 && int(count) > width) {
-    count=width
-  };str=sprintf("%*c",count,sy); gsub(" ",sy,str); printf("%-9s : %s\n", $2, str)}')
+    hist_ord_func
 fi
 
 if [ "$COMMAND" = "pos" ]; then
@@ -197,36 +291,7 @@ if [ "$COMMAND" = "pos" ]; then
 fi
 
 if [ "$COMMAND" = "graph-pos" ]; then
-   pos_func
-   longestNum=$(echo "$LOG_FILES" | sed 's/ //g'| awk -F  ":" 'function abs(x){return(sqrt(x * x))}
-   {num=sprintf($2)
-   if(abs(num) > abs(longestNum))
-   {
-     longestNum=num
-   }
-   } END {print longestNum}')
-   LOG_FILES=$(echo "$LOG_FILES" | sort -t: -k1,1 | sed 's/ //g'  |awk -F ":" -v width="$WIDTH" -v lN="$longestNum" '{if($2 < 0 ){
-     sy="!"
-   }
-   else
-   {
-     sy="#"
-   }
-   if(width==0)
-   {
-     count=int($2/1000)
-   }
-   else
-   {
-     res=lN/width
-     count=int($2/res)
-   };
-   if(count==0){
-     printf("%-9s :\n", $1)
-   }
-   else{
-   str=sprintf("%*c",count,sy); gsub(" ",sy,str); printf("%-9s : %s\n", $1, str)
-  }}')
+   graph_pos_func
 fi
 echo "$LOG_FILES"
 exit 0
