@@ -4,12 +4,54 @@ export POSIXLY_CORRECT=yes
 export LC_NUMERIC=en_US.UTF-8
 
 print_help()
-{
-  echo "Usage: tradelog [-h|--help]"
-	echo "       tradelog [FILTR] [PŘÍKAZ] [LOG [LOG2 [...]]"
-	echo ""
-}
+{ echo "NAME"
+  echo "     tradelog -- stock market log analyzer\n"
+  echo "SYNOPSIS"
+  echo "     tradelog [-h|--help]"
+	echo "              [FILTER] [COMMAND] [LOG [LOG2 [...]]\n"
+	echo "DESCRIPTION"
+  echo "     The tradelog is script for stock market system record analysis. The script"
+  echo "     filters records and provides statistics according to user input.\n"
+  echo "The COMMAND can be one of:\n"
+  echo "     list-tick"
+  echo "             Print a list of occurring stock exchange symbols so-called \"ticks\".\n"
+  echo "     profit"
+  echo "             Print a statement of total profit from closed positions.\n"
+  echo "     pos"
+  echo "             Print a list of values of currently held positions sorted in"
+  echo "             descending order by value.\n"
+  echo "     last-price"
+  echo "             Print a list of the last known price for each ticker.\n"
+  echo "     hist-ord"
+  echo "             Print a list of histogram of the number of transactions "
+  echo "             according to the ticker.\n"
+  echo "     graph-pos"
+  echo "             Print a list of graph of values of held positions
+             according to the ticker.\n"
+  echo "The FILTER can be a combination of the following:\n"
+  echo "      -a DATETIME
+             After: only records after this date are considered (without
+             this date). DATETIME is in the format YYYY-MM-DD HH:MM:SS.\n"
+  echo "      -b DATETIME
+             Before: only records BEFORE this date (without this date) are
+             considered.\n"
+  echo "      -t TICKER
+             Only records corresponding to the given ticker are considered.
+             With multiple occurrences of the switch, the set of all listed
+             ticker is taken.\n"
+  echo "      -w WIDTH
+             Sets the width of the graph listing, ie the length of the
+             longest line to WIDTH. Thus, WIDTH must be a positive
+             integer. Multiple occurrences of the switch is a
+             faulty start.\n"
+  echo "      -h, --help
+             Print help with a brief description of each command and switch.\n"
+  echo "AUTHOR"
+  echo "       Made by Vakhov Daniil | xvakho01"
+  echo "                                         2021 Mar 30                                       "
 
+
+}
 
 
 COMMAND=""
@@ -149,3 +191,6 @@ fi
 #11)Ubrat lishnie peremennye
 #12)Naiti kak proverit rabotosposobnost na vsex shellax
 #13)Proverit na merline
+#14)Pri uspeshnom vzpolnenii uspeshniy kod vzponenia
+#15)Сделать авторасширяемым и сужаемым хелп
+#16)Как внутри скрипта сделать болд текст
