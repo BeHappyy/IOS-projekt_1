@@ -49,10 +49,21 @@ print_help()
   echo "AUTHOR"
   echo "       Made by Vakhov Daniil | xvakho01"
   echo "                                         2021 Mar 30                                       "
-
-
 }
 
+pos_func() {
+  LOG_FILES=$(echo "$LOG_FILES" | awk -F ';' '{print$2" "$1" "$6" "$4" "$3}' | sort -k1,2 |  awk '{if($6=="buy")
+ { seen[$1]+=$4; lp[$1]=$5} else {seen[$1]-=$4; lp[$1]=$5} }
+ END { for (i in seen)
+ printf("%s:%.2f\n"), i, seen[i]*lp[i]}' | sort -n -t: -k2,2 | sed '1!G;h;$!d')
+ longestNum=$(echo "$LOG_FILES" | awk -F  ":" '{num=sprintf($2)
+ if(length(num) > longestNum)
+ {
+   longestNum=length(num)
+ }
+ } END {print longestNum}')
+ LOG_FILES=$(echo "$LOG_FILES" | awk -F ":" -v lN="$longestNum" '{printf("%-9s : %*.2f\n", $1, lN, $2)}')
+}
 
 COMMAND=""
 WIDTH=0
@@ -86,10 +97,15 @@ do case "$opts" in
       TFLAG=1;;
    w) WCOUNT=$(( $WCOUNT + 1 ))
       if [ "$WCOUNT" = 2 ]; then
-          echo "Chybne spusteni"
+          echo "Fail."
           exit 1;
       fi
-     WIDTH="$OPTARG";;
+      if [ $OPTARG -lt 0 ]; then
+        echo "Fail."
+        exit 1;
+      else
+        WIDTH="$OPTARG"
+      fi;;
    h) print_help
       exit 0;;
    -) print_help
@@ -145,7 +161,6 @@ fi
 
 if [ "$COMMAND" = "last-price" ]; then
     LOG_FILES=$(echo "$LOG_FILES" | sed '1!G;h;$!d' | awk -F ";" '{print$2":"$4}' | sort -t: -u -k 1,1)
-        longestNum=0
         longestNum=$(echo "$LOG_FILES" | awk -F  ":" '{num=sprintf($2)
         if(length(num) > longestNum)
         {
@@ -159,34 +174,50 @@ fi
 if [ "$COMMAND" = "hist-ord" ]; then
   LOG_FILES=$(echo "$LOG_FILES" | awk -F ';' '{print$2}'| sort | uniq -c | awk -v width="$WIDTH" '{ count=sprintf($1);sy="#";
 if (width!=0 && int(count) > width) {
-
     count=width
-    #print count
   };str=sprintf("%*c",count,sy); gsub(" ",sy,str); printf("%-9s : %s\n", $2, str)}')
 fi
 
 if [ "$COMMAND" = "pos" ]; then
-   LOG_FILES=$(echo "$LOG_FILES" | awk -F ';' '{print$2" "$1" "$6" "$4" "$3}' | sort -k1,2 |  awk '{if($6=="buy")
-  { seen[$1]+=$4; lp[$1]=$5} else {seen[$1]-=$4; lp[$1]=$5} }
-  END { for (i in seen)
-  printf("%s:%.2f\n"), i, seen[i]*lp[i]}' | sort -n -t: -k2,2 | sed '1!G;h;$!d')
-  longestNum=$(echo "$LOG_FILES" | awk -F  ":" '{num=sprintf($2)
-  if(length(num) > longestNum)
-  {
-    longestNum=length(num)
-  }
-  } END {print longestNum}')
-  LOG_FILES=$(echo "$LOG_FILES" | awk -F ":" -v lN="$longestNum" '{printf("%-9s : %*.2f\n", $1, lN, $2)}')
+   pos_func
 fi
-  echo "$LOG_FILES"
 
+if [ "$COMMAND" = "graph-pos" ]; then
+   pos_func
+   longestNum=$(echo "$LOG_FILES" | sed 's/ //g'| awk -F  ":" 'function abs(x){if(x < 0.0) return(sqrt(x * x))}
+   {num=sprintf($2)
+   print abs(num)}'
+   echo "$longestNum"
+   echo "$longestNum"
+   # LOG_FILES=$(echo "$LOG_FILES" | sort -t: -k1,1 |awk -F ":" -v width="$WIDTH" -v lN="$longestNum" '{if($2 < 0 ){
+   #   sy="!"
+   # }
+   # else
+   # {
+   #   sy="#"
+   # }
+   # if(width==0)
+   # {
+   #   count=int($2/1000)
+   # }
+   # else
+   # {
+   #   res=lN/width
+   #   print res
+   #   count=int($2/res)
+   # };
+   # str=sprintf("%*c",count,sy); gsub(" ",sy,str); printf("%-9s : %s\n", $1, str)
+   # }')
+fi
+# echo "$LOG_FILES"
+
+  exit 0
 #2)Должен описовать зазнымы если не дано ни приказов ни фильтров при этом он может получить на вход не название файла
 #а уже его содержимое
 #4)Выволд ошбки если вызван препинач без параметров
 #6) Закинуть все в функции отдельные
-#7)Chyba kdyz WIDTH < 0
 #8)Dodelat graph-pos
-#9)Dodelat help
+#9)Dodelat help V
 #10)Prognat po testam v 1001 raz
 #11)Ubrat lishnie peremennye
 #12)Naiti kak proverit rabotosposobnost na vsex shellax
