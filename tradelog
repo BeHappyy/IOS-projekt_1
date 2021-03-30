@@ -3,13 +3,30 @@
 export POSIXLY_CORRECT=yes
 export LC_NUMERIC=en_US.UTF-8
 
- if ! test -t 0; then
-     while IFS= read -r line; do
-       LOG_FILES="$LOG_FILES$line\n"
-       
-     done
-     echo $LOG_FILES
- fi
+COMMAND=""
+WIDTH=0
+TICKER=""
+DATE_BEFORE="9999-12-31 23:59:59"
+DATE_AFTER="0000-00-00 00:00:00"
+LOG_FILES=""
+TFLAG=""
+DAFLAG=""
+DBFLAG=""
+WCOUNT=0
+NOPTARG=""
+PROFIT=0.00
+
+# test whether there is redirected input
+if ! test -t 0; then
+    RI_FLAG=1
+    while IFS= read -r line; do
+      LOG_FILES="$LOG_FILES$line\n"
+    done
+    # deleting the last "\n" empty line by the means of NF(number of fields in a line)
+    ## Sorry for such a coding style :(
+    LOG_FILES=$(echo "$LOG_FILES" | awk -F ';' '{ if (NF == 0) {next}
+                                                  else {print} }')
+fi
 
 print_help()
 { echo "NAME"
@@ -73,18 +90,7 @@ pos_func() {
  LOG_FILES=$(echo "$LOG_FILES" | awk -F ":" -v lN="$longestNum" '{printf("%-9s : %*.2f\n", $1, lN, $2)}')
 }
 
-COMMAND=""
-WIDTH=0
-TICKER=""
-DATE_BEFORE="9999-12-31 23:59:59"
-DATE_AFTER="0000-00-00 00:00:00"
-LOG_FILES=""
-TFLAG=""
-DAFLAG=""
-DBFLAG=""
-WCOUNT=0
-NOPTARG=""
-PROFIT=0.00
+
 
 while getopts w:t:a:b:h-: opts
 do case "$opts" in
@@ -146,7 +152,7 @@ while [ "$#" -gt 0 ]; do
   esac
 done
 
-LOG_FILES=$(echo "$LOG_FILES" | sed '/^$/d')
+# LOG_FILES=$(echo "$LOG_FILES" | sed '/^$/d')
 
 
 if [ "$TFLAG" = "1" ]; then
@@ -224,7 +230,6 @@ if [ "$COMMAND" = "graph-pos" ]; then
 fi
 echo "$LOG_FILES"
 exit 0
-
 #2)Должен описовать зазнымы если не дано ни приказов ни фильтров при этом он может получить на вход не название файла
 #а уже его содержимое
 #4)Выволд ошбки если вызван препинач без параметров
