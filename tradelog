@@ -3,6 +3,13 @@
 export POSIXLY_CORRECT=yes
 export LC_NUMERIC=en_US.UTF-8
 
+# if ! test -t 0; then
+#     while IFS= read -r line; do
+#       LOG_FILES="$LOG_FILES$line\n"
+#     done
+#     echo $LOG_FILES
+# fi
+
 print_help()
 { echo "NAME"
   echo "     tradelog -- stock market log analyzer\n"
@@ -184,40 +191,43 @@ fi
 
 if [ "$COMMAND" = "graph-pos" ]; then
    pos_func
-   longestNum=$(echo "$LOG_FILES" | sed 's/ //g'| awk -F  ":" 'function abs(x){if(x < 0.0) return(sqrt(x * x))}
+   longestNum=$(echo "$LOG_FILES" | sed 's/ //g'| awk -F  ":" 'function abs(x){return(sqrt(x * x))}
    {num=sprintf($2)
-   print abs(num)}'
-   echo "$longestNum"
-   echo "$longestNum"
-   # LOG_FILES=$(echo "$LOG_FILES" | sort -t: -k1,1 |awk -F ":" -v width="$WIDTH" -v lN="$longestNum" '{if($2 < 0 ){
-   #   sy="!"
-   # }
-   # else
-   # {
-   #   sy="#"
-   # }
-   # if(width==0)
-   # {
-   #   count=int($2/1000)
-   # }
-   # else
-   # {
-   #   res=lN/width
-   #   print res
-   #   count=int($2/res)
-   # };
-   # str=sprintf("%*c",count,sy); gsub(" ",sy,str); printf("%-9s : %s\n", $1, str)
-   # }')
+   if(abs(num) > abs(longestNum))
+   {
+     longestNum=num
+   }
+   } END {print longestNum}')
+   LOG_FILES=$(echo "$LOG_FILES" | sort -t: -k1,1 | sed 's/ //g'  |awk -F ":" -v width="$WIDTH" -v lN="$longestNum" '{if($2 < 0 ){
+     sy="!"
+   }
+   else
+   {
+     sy="#"
+   }
+   if(width==0)
+   {
+     count=int($2/1000)
+   }
+   else
+   {
+     res=lN/width
+     count=int($2/res)
+   };
+   if(count==0){
+     printf("%-9s :\n", $1)
+   }
+   else{
+   str=sprintf("%*c",count,sy); gsub(" ",sy,str); printf("%-9s : %s\n", $1, str)
+  }}')
 fi
-# echo "$LOG_FILES"
+echo "$LOG_FILES"
+exit 0
 
-  exit 0
 #2)Должен описовать зазнымы если не дано ни приказов ни фильтров при этом он может получить на вход не название файла
 #а уже его содержимое
 #4)Выволд ошбки если вызван препинач без параметров
 #6) Закинуть все в функции отдельные
-#8)Dodelat graph-pos
-#9)Dodelat help V
 #10)Prognat po testam v 1001 raz
 #11)Ubrat lishnie peremennye
 #12)Naiti kak proverit rabotosposobnost na vsex shellax
