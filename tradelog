@@ -191,7 +191,6 @@ WIDTH=0
 
 # test whether there is redirected input
 if ! test -t 0; then
-    RI_FLAG=1
     while IFS= read -r line; do
       LOG_FILES="$LOG_FILES$line\n"
     done
@@ -295,14 +294,9 @@ if [ "$COMMAND" = "graph-pos" ]; then
 fi
 echo "$LOG_FILES"
 exit 0
-#2)Должен описовать зазнымы если не дано ни приказов ни фильтров при этом он может получить на вход не название файла
-#а уже его содержимое
-#4)Выволд ошбки если вызван препинач без параметров
-#6) Закинуть все в функции отдельные
-#10)Prognat po testam v 1001 raz
-#11)Ubrat lishnie peremennye
-#12)Naiti kak proverit rabotosposobnost na vsex shellax
-#13)Proverit na merline
-#14)Pri uspeshnom vzpolnenii uspeshniy kod vzponenia
-#15)Сделать авторасширяемым и сужаемым хелп
-#16)Как внутри скрипта сделать болд текст
+
+#1)Выволд ошбки если вызван препинач без параметров
+#2)Изменить в хелпе все эхо на printf
+#3)Добить все проверки на папича
+
+
