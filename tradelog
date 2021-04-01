@@ -4,7 +4,7 @@ export POSIXLY_CORRECT=yes
 export LC_NUMERIC=en_US.UTF-8
 
 print_help(){
-echo "NAME"
+  echo "NAME"
   echo "     tradelog -- stock market log analyzer\n"
   echo "SYNOPSIS"
   echo "     tradelog [-h|--help]"
@@ -123,12 +123,19 @@ last_price_func() {
 }
 
 hist_ord_func() {
-  LOG_FILES=$(echo "$LOG_FILES" | awk -F ';' '{print$2}'| sort | uniq -c | awk -v width="$WIDTH" '{
+  LOG_FILES=$(echo "$LOG_FILES" | awk -F ';' '{print$2}'| sort | uniq -c)
+  mcount=$(echo "$LOG_FILES" | awk '{count=sprintf($1)
+  if (mcount < count)
+  {
+    mcount=count
+  }
+  } END {print mcount}')
+  LOG_FILES=$(echo "$LOG_FILES" | awk -v mcount="$mcount" -v width="$WIDTH" '{
   count=sprintf($1);
   sy="#";
-  if (width!=0 && int(count) > width)
+  if (width!=0)
   {
-    count=width
+    count=(count/mcount)*width
   };
   str=sprintf("%*c",count,sy);
   gsub(" ",sy,str);
