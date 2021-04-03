@@ -218,7 +218,7 @@ do case "$opts" in
           DATE_AFTER="$OPTARG"
         fi
       else
-        echo "The wrong format of the date"
+        echo "The wrong format of the date."
         exit 1
       fi;;
 
@@ -231,7 +231,7 @@ do case "$opts" in
           DATE_BEFORE="$OPTARG"
         fi
       else
-        echo "The wrong format of the date"
+        echo "The wrong format of the date."
         exit 1
       fi;;
    t) #checking whether the format of a ticker is correct
