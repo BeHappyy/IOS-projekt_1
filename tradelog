@@ -191,8 +191,8 @@ LOG_FILES=""
 TFLAG=""
 DAFLAG=""
 DBFLAG=""
-NOPTARG=""
-WCOUNT=0
+NEW_OPTARG=""
+WIDTH_COUNT=0
 PROFIT=0.00
 WIDTH=0
 
@@ -209,36 +209,65 @@ fi
 while getopts w:t:a:b:h-: opts
 do case "$opts" in
    a) DAFLAG=1
-      NOPTARG=$(echo "$OPTARG" | sed 's/-//g ; s/://g ; s/ //g')
-      NDATE_AFTER=$(echo "$DATE_AFTER" | sed 's/-//g ; s/://g ; s/ //g' )
-      if [ $NOPTARG -gt $NDATE_AFTER ]; then
+      echo "$OPTARG" | awk
+      NEW_OPTARG=$(echo "$OPTARG" | sed 's/-//g ; s/://g ; s/ //g')
+      NEW_DATE_AFTER=$(echo "$DATE_AFTER" | sed 's/-//g ; s/://g ; s/ //g' )
+      if [ $NEW_OPTARG -gt $NEW_DATE_AFTER ]; then
         DATE_AFTER="$OPTARG"
       fi ;;
 
    b) DBFLAG=1
-      NOPTARG=$(echo "$OPTARG" | sed 's/-//g ; s/://g ; s/ //g')
-      NDATE_BEFORE=$(echo "$DATE_BEFORE" | sed 's/-//g ; s/://g ; s/ //g' )
-      if [ $NOPTARG -lt $NDATE_BEFORE ]; then
+      NEW_OPTARG=$(echo "$OPTARG" | sed 's/-//g ; s/://g ; s/ //g')
+      NEW_DATE_BEFORE=$(echo "$DATE_BEFORE" | sed 's/-//g ; s/://g ; s/ //g' )
+      if [ $NEW_OPTARG -lt $NEW_DATE_BEFORE ]; then
         DATE_BEFORE="$OPTARG"
       fi ;;
-   t) TFLAG=1
-      TICKER="$TICKER$OPTARG;";;
-   w) WCOUNT=$(( $WCOUNT + 1 ))
-      if [ "$WCOUNT" = 2 ]; then
-          echo "Fail."
-          exit 1;
+   t) #checking whether the format of a ticker is correct
+      if echo "$OPTARG" | grep -q '[[:lower:]]'; then
+          echo "Invalid '-t' parameter: $OPTARG."
+          echo "Input the right name of TICKER."
+          exit 1
+      elif echo "$OPTARG" | grep -q '[[:punct:]]'; then
+          echo "Invalid '-t' parameter: $OPTARG."
+          echo "Input the right name of TICKER."
+          exit 1
+      elif echo "$OPTARG" | grep -q '[[:digit:]]'; then
+          echo "Invalid '-t' parameter: $OPTARG."
+          echo "Input the right name of TICKER."
+          exit 1
+      else
+          TFLAG=1
+          TICKER="$TICKER$OPTARG;"
       fi
-      if [ $OPTARG -lt 0 ]; then
-        echo "Fail."
-        exit 1;
+      ;;
+   w)
+      WIDTH_COUNT=$(( $WIDTH_COUNT + 1 ))
+      if [ "$WIDTH_COUNT" = 2 ]; then
+          echo "More occurrences of option than was expected."
+          exit 1
+      elif ! echo "$OPTARG" | grep -qE '^[0-9]+$'; then
+           echo "PARAMETER OF 'WIDTH' IS NOT INTEGER OR POSSITIVE."
+           exit 1
       else
         WIDTH="$OPTARG"
       fi;;
-   h) print_help
-      exit 0;;
-   -) print_help
-      exit 0;;
-   *) echo "Invalid flag"
+   h) if echo "$*" | grep -q '[-h]$'; then
+          print_help
+          exit 0
+      else
+          echo "Invalid $* option"
+          echo "Maybe you mean '--help' or '-h'?"
+          exit 1
+      fi;;
+   -) if echo "$*" | grep -qw '\--help'; then
+          print_help
+          exit 0
+      else
+          echo "Invalid $* option"
+          echo "Maybe you mean '--help' or '-h'?"
+          exit 1
+      fi;;
+   *) echo "Invalid option."
       exit 1;;
    esac
 done
@@ -260,7 +289,7 @@ while [ "$#" -gt 0 ]; do
     shift
     ;;
   *)
-    echo "Invalid argument"
+    echo "Invalid argument."
     exit 1
     ;;
   esac
@@ -302,6 +331,5 @@ fi
 echo "$LOG_FILES"
 exit 0
 
-#1)Выволд ошбки если вызван препинач без параметров
 #2)Изменить в хелпе все эхо на printf
 #3)Добить все проверки на папича
