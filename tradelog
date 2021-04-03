@@ -208,20 +208,32 @@ fi
 
 while getopts w:t:a:b:h-: opts
 do case "$opts" in
-   a) DAFLAG=1
-      echo "$OPTARG" | awk
-      NEW_OPTARG=$(echo "$OPTARG" | sed 's/-//g ; s/://g ; s/ //g')
-      NEW_DATE_AFTER=$(echo "$DATE_AFTER" | sed 's/-//g ; s/://g ; s/ //g' )
-      if [ $NEW_OPTARG -gt $NEW_DATE_AFTER ]; then
-        DATE_AFTER="$OPTARG"
-      fi ;;
+   a) regex='[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]\s[0-9][0-9]:[0-9][0-9]:[0-9][0-9]'
+      if echo "$OPTARG" | grep -q "$regex"; then
+        DAFLAG=1
+        echo "$OPTARG" | awk
+        NEW_OPTARG=$(echo "$OPTARG" | sed 's/-//g ; s/://g ; s/ //g')
+        NEW_DATE_AFTER=$(echo "$DATE_AFTER" | sed 's/-//g ; s/://g ; s/ //g' )
+        if [ $NEW_OPTARG -gt $NEW_DATE_AFTER ]; then
+          DATE_AFTER="$OPTARG"
+        fi
+      else
+        echo "The wrong format of the date"
+        exit 1
+      fi;;
 
-   b) DBFLAG=1
-      NEW_OPTARG=$(echo "$OPTARG" | sed 's/-//g ; s/://g ; s/ //g')
-      NEW_DATE_BEFORE=$(echo "$DATE_BEFORE" | sed 's/-//g ; s/://g ; s/ //g' )
-      if [ $NEW_OPTARG -lt $NEW_DATE_BEFORE ]; then
-        DATE_BEFORE="$OPTARG"
-      fi ;;
+   b) regex='[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]\s[0-9][0-9]:[0-9][0-9]:[0-9][0-9]'
+      if echo "$OPTARG" | grep -q "$regex"; then
+        DBFLAG=1
+        NEW_OPTARG=$(echo "$OPTARG" | sed 's/-//g ; s/://g ; s/ //g')
+        NEW_DATE_BEFORE=$(echo "$DATE_BEFORE" | sed 's/-//g ; s/://g ; s/ //g' )
+        if [ $NEW_OPTARG -lt $NEW_DATE_BEFORE ]; then
+          DATE_BEFORE="$OPTARG"
+        fi
+      else
+        echo "The wrong format of the date"
+        exit 1
+      fi;;
    t) #checking whether the format of a ticker is correct
       if echo "$OPTARG" | grep -q '[[:lower:]]'; then
           echo "Invalid '-t' parameter: $OPTARG."
