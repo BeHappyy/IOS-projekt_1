@@ -340,8 +340,5 @@ fi
 if [ "$COMMAND" = "graph-pos" ]; then
    graph_pos_func
 fi
-echo "$LOG_FILES"
+printf "$LOG_FILES"
 exit 0
-
-#2)Изменить в хелпе все эхо на printf
-#3)Добить все проверки на папича
