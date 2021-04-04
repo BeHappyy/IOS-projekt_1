@@ -185,15 +185,15 @@ graph_pos_func() {
 
 COMMAND=""
 TICKER=""
+DAFLAG=""
+DBFLAG=""
+NEW_OPTARG=""
 DATE_BEFORE="9999-12-31 23:59:59"
 DATE_AFTER="0000-00-00 00:00:00"
 LOG_FILES=""
 TFLAG=""
-DAFLAG=""
-DBFLAG=""
-NEW_OPTARG=""
-WIDTH_COUNT=0
 PROFIT=0.00
+WIDTH_COUNT=0
 WIDTH=0
 
 # test whether there is redirected input
@@ -205,13 +205,13 @@ if ! test -t 0; then
     LOG_FILES=$(echo "$LOG_FILES" | awk -F ';' '{ if (NF == 0) {next} else {print} }')
 fi
 
-
+# parsing our possible options and their parameters
 while getopts w:t:a:b:h-: opts
 do case "$opts" in
    a) regex='[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]\s[0-9][0-9]:[0-9][0-9]:[0-9][0-9]'
       if echo "$OPTARG" | grep -q "$regex"; then
         DAFLAG=1
-        echo "$OPTARG" | awk
+        # for finding the intersection in the case of more than one occurrence of -a and -b options
         NEW_OPTARG=$(echo "$OPTARG" | sed 's/-//g ; s/://g ; s/ //g')
         NEW_DATE_AFTER=$(echo "$DATE_AFTER" | sed 's/-//g ; s/://g ; s/ //g' )
         if [ $NEW_OPTARG -gt $NEW_DATE_AFTER ]; then
@@ -225,6 +225,7 @@ do case "$opts" in
    b) regex='[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]\s[0-9][0-9]:[0-9][0-9]:[0-9][0-9]'
       if echo "$OPTARG" | grep -q "$regex"; then
         DBFLAG=1
+        # for finding the intersection in the case of more than one occurrence of -a and -b options
         NEW_OPTARG=$(echo "$OPTARG" | sed 's/-//g ; s/://g ; s/ //g')
         NEW_DATE_BEFORE=$(echo "$DATE_BEFORE" | sed 's/-//g ; s/://g ; s/ //g' )
         if [ $NEW_OPTARG -lt $NEW_DATE_BEFORE ]; then
@@ -253,7 +254,7 @@ do case "$opts" in
       fi
       ;;
    w)
-      WIDTH_COUNT=$(( $WIDTH_COUNT + 1 ))
+      WIDTH_COUNT=$(( $WIDTH_COUNT + 1 )) # more than one occurrence
       if [ "$WIDTH_COUNT" = 2 ]; then
           echo "More occurrences of option than was expected."
           exit 1
@@ -286,12 +287,15 @@ done
 
 shift $(($OPTIND - 1))
 
+
+# initializing value for the command and delete argument
 while [ "$#" -gt 0 ]; do
   case "$1" in
   list-tick | profit | pos | last-price | hist-ord | graph-pos)
     COMMAND="$1"
     shift
     ;;
+  # unzipping our logs
   *.log.gz)
     LOG_FILES="$LOG_FILES$(gzip -d -c "$1")\n"
     shift
@@ -307,8 +311,11 @@ while [ "$#" -gt 0 ]; do
   esac
 done
 
+# delete all empty lines
 LOG_FILES=$(echo "$LOG_FILES" | sed '/^$/d')
 
+
+# checking flags of options
 if [ "$TFLAG" = "1" ]; then
     t_func
 fi
@@ -318,6 +325,7 @@ fi
 if [ "$DBFLAG" = "1" ]; then
     b_func
 fi
+# checking the command among possible ones
 if [ "$COMMAND" = "list-tick" ]; then
     list_tick_func
 fi
